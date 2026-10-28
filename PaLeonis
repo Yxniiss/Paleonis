@@ -1,74 +1,24 @@
---
--- PostgreSQL database dump
---
+-- Script compatible avec le Query Tool de pgAdmin
+-- (sans \restrict, \unrestrict, COPY ... FROM stdin ni \.)
 
-\restrict htB24GnpFBhxCaDxpVvP0IPjMbut5RdsQXrecBlRamlhsgkZXQ5SK0MXivbingp
-
--- Dumped from database version 18.6
--- Dumped by pg_dump version 18.6
-
--- Started on 2026-10-27 18:49:29
-
-SET statement_timeout = 0;
-SET lock_timeout = 0;
-SET idle_in_transaction_session_timeout = 0;
-SET transaction_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
-SELECT pg_catalog.set_config('search_path', '', false);
 SET check_function_bodies = false;
-SET xmloption = content;
 SET client_min_messages = warning;
-SET row_security = off;
 
-SET default_tablespace = '';
+-- =========================
+-- TABLES
+-- =========================
 
-SET default_table_access_method = heap;
-
---
--- TOC entry 228 (class 1259 OID 25335)
--- Name: abonnement; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.abonnement (
-    id_abonnement integer NOT NULL,
-    date_debut date DEFAULT CURRENT_DATE NOT NULL,
-    date_fin date,
-    statut character varying(20) NOT NULL,
-    prix_souscription numeric(10,2) NOT NULL,
-    id_client integer NOT NULL,
-    id_offre integer NOT NULL,
-    id_serveur integer,
-    CONSTRAINT abonnement_check CHECK (((date_fin IS NULL) OR (date_fin >= date_debut))),
-    CONSTRAINT abonnement_prix_souscription_check CHECK ((prix_souscription >= (0)::numeric)),
-    CONSTRAINT abonnement_statut_check CHECK (((statut)::text = ANY ((ARRAY['actif'::character varying, 'suspendu'::character varying, 'resilie'::character varying])::text[])))
+CREATE TABLE public.datacenter (
+    id_datacenter integer GENERATED ALWAYS AS IDENTITY,
+    nom character varying(100) NOT NULL,
+    ville character varying(100) NOT NULL,
+    CONSTRAINT datacenter_pkey PRIMARY KEY (id_datacenter)
 );
-
-
-ALTER TABLE public.abonnement OWNER TO postgres;
-
---
--- TOC entry 227 (class 1259 OID 25334)
--- Name: abonnement_id_abonnement_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-ALTER TABLE public.abonnement ALTER COLUMN id_abonnement ADD GENERATED ALWAYS AS IDENTITY (
-    SEQUENCE NAME public.abonnement_id_abonnement_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1
-);
-
-
---
--- TOC entry 222 (class 1259 OID 25279)
--- Name: client; Type: TABLE; Schema: public; Owner: postgres
---
 
 CREATE TABLE public.client (
-    id_client integer NOT NULL,
+    id_client integer GENERATED ALWAYS AS IDENTITY,
     nom character varying(150) NOT NULL,
     email character varying(254) NOT NULL,
     telephone character varying(30),
@@ -76,161 +26,69 @@ CREATE TABLE public.client (
     type_client character varying(20) NOT NULL,
     denomination_sociale character varying(200),
     siret character varying(14),
+    CONSTRAINT client_pkey PRIMARY KEY (id_client),
+    CONSTRAINT client_email_key UNIQUE (email),
     CONSTRAINT client_check CHECK (((((type_client)::text = 'entreprise'::text) AND (siret IS NOT NULL)) OR (((type_client)::text = 'particulier'::text) AND (siret IS NULL)))),
     CONSTRAINT client_type_client_check CHECK (((type_client)::text = ANY ((ARRAY['particulier'::character varying, 'entreprise'::character varying])::text[])))
 );
 
-
-ALTER TABLE public.client OWNER TO postgres;
-
---
--- TOC entry 221 (class 1259 OID 25278)
--- Name: client_id_client_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-ALTER TABLE public.client ALTER COLUMN id_client ADD GENERATED ALWAYS AS IDENTITY (
-    SEQUENCE NAME public.client_id_client_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1
-);
-
-
---
--- TOC entry 220 (class 1259 OID 25270)
--- Name: datacenter; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.datacenter (
-    id_datacenter integer NOT NULL,
-    nom character varying(100) NOT NULL,
-    ville character varying(100) NOT NULL
-);
-
-
-ALTER TABLE public.datacenter OWNER TO postgres;
-
---
--- TOC entry 219 (class 1259 OID 25269)
--- Name: datacenter_id_datacenter_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-ALTER TABLE public.datacenter ALTER COLUMN id_datacenter ADD GENERATED ALWAYS AS IDENTITY (
-    SEQUENCE NAME public.datacenter_id_datacenter_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1
-);
-
-
---
--- TOC entry 224 (class 1259 OID 25297)
--- Name: offre; Type: TABLE; Schema: public; Owner: postgres
---
-
 CREATE TABLE public.offre (
-    id_offre integer NOT NULL,
+    id_offre integer GENERATED ALWAYS AS IDENTITY,
     nom character varying(150) NOT NULL,
     categorie character varying(40) NOT NULL,
     prix_mensuel_ht numeric(10,2) NOT NULL,
     en_vente boolean DEFAULT true NOT NULL,
+    CONSTRAINT offre_pkey PRIMARY KEY (id_offre),
     CONSTRAINT offre_categorie_check CHECK (((categorie)::text = ANY ((ARRAY['VPS'::character varying, 'hebergement mutualise'::character varying, 'serveur dedie'::character varying, 'nom de domaine'::character varying])::text[]))),
     CONSTRAINT offre_prix_mensuel_ht_check CHECK ((prix_mensuel_ht >= (0)::numeric))
 );
 
-
-ALTER TABLE public.offre OWNER TO postgres;
-
---
--- TOC entry 223 (class 1259 OID 25296)
--- Name: offre_id_offre_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-ALTER TABLE public.offre ALTER COLUMN id_offre ADD GENERATED ALWAYS AS IDENTITY (
-    SEQUENCE NAME public.offre_id_offre_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1
-);
-
-
---
--- TOC entry 226 (class 1259 OID 25311)
--- Name: serveur; Type: TABLE; Schema: public; Owner: postgres
---
-
 CREATE TABLE public.serveur (
-    id_serveur integer NOT NULL,
+    id_serveur integer GENERATED ALWAYS AS IDENTITY,
     nom_hote character varying(255) NOT NULL,
     adresse_ip inet NOT NULL,
     statut character varying(20) NOT NULL,
     date_mise_en_service date NOT NULL,
     id_datacenter integer NOT NULL,
-    CONSTRAINT serveur_statut_check CHECK (((statut)::text = ANY ((ARRAY['en service'::character varying, 'maintenance'::character varying, 'hors service'::character varying])::text[])))
+    CONSTRAINT serveur_pkey PRIMARY KEY (id_serveur),
+    CONSTRAINT serveur_nom_hote_key UNIQUE (nom_hote),
+    CONSTRAINT serveur_adresse_ip_key UNIQUE (adresse_ip),
+    CONSTRAINT serveur_statut_check CHECK (((statut)::text = ANY ((ARRAY['en service'::character varying, 'maintenance'::character varying, 'hors service'::character varying])::text[]))),
+    CONSTRAINT serveur_id_datacenter_fkey FOREIGN KEY (id_datacenter) REFERENCES public.datacenter(id_datacenter) ON DELETE RESTRICT
 );
 
-
-ALTER TABLE public.serveur OWNER TO postgres;
-
---
--- TOC entry 225 (class 1259 OID 25310)
--- Name: serveur_id_serveur_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-ALTER TABLE public.serveur ALTER COLUMN id_serveur ADD GENERATED ALWAYS AS IDENTITY (
-    SEQUENCE NAME public.serveur_id_serveur_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1
+CREATE TABLE public.abonnement (
+    id_abonnement integer GENERATED ALWAYS AS IDENTITY,
+    date_debut date DEFAULT CURRENT_DATE NOT NULL,
+    date_fin date,
+    statut character varying(20) NOT NULL,
+    prix_souscription numeric(10,2) NOT NULL,
+    id_client integer NOT NULL,
+    id_offre integer NOT NULL,
+    id_serveur integer,
+    CONSTRAINT abonnement_pkey PRIMARY KEY (id_abonnement),
+    CONSTRAINT abonnement_id_serveur_key UNIQUE (id_serveur),
+    CONSTRAINT abonnement_check CHECK (((date_fin IS NULL) OR (date_fin >= date_debut))),
+    CONSTRAINT abonnement_prix_souscription_check CHECK ((prix_souscription >= (0)::numeric)),
+    CONSTRAINT abonnement_statut_check CHECK (((statut)::text = ANY ((ARRAY['actif'::character varying, 'suspendu'::character varying, 'resilie'::character varying])::text[]))),
+    CONSTRAINT abonnement_id_client_fkey FOREIGN KEY (id_client) REFERENCES public.client(id_client) ON DELETE RESTRICT,
+    CONSTRAINT abonnement_id_offre_fkey FOREIGN KEY (id_offre) REFERENCES public.offre(id_offre) ON DELETE RESTRICT,
+    CONSTRAINT abonnement_id_serveur_fkey FOREIGN KEY (id_serveur) REFERENCES public.serveur(id_serveur) ON DELETE RESTRICT
 );
-
-
---
--- TOC entry 230 (class 1259 OID 25368)
--- Name: technicien; Type: TABLE; Schema: public; Owner: postgres
---
 
 CREATE TABLE public.technicien (
-    id_technicien integer NOT NULL,
+    id_technicien integer GENERATED ALWAYS AS IDENTITY,
     nom character varying(100) NOT NULL,
     prenom character varying(100) NOT NULL,
     email_professionnel character varying(254) NOT NULL,
-    id_datacenter integer NOT NULL
+    id_datacenter integer NOT NULL,
+    CONSTRAINT technicien_pkey PRIMARY KEY (id_technicien),
+    CONSTRAINT technicien_email_professionnel_key UNIQUE (email_professionnel),
+    CONSTRAINT technicien_id_datacenter_fkey FOREIGN KEY (id_datacenter) REFERENCES public.datacenter(id_datacenter) ON DELETE RESTRICT
 );
-
-
-ALTER TABLE public.technicien OWNER TO postgres;
-
---
--- TOC entry 229 (class 1259 OID 25367)
--- Name: technicien_id_technicien_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-ALTER TABLE public.technicien ALTER COLUMN id_technicien ADD GENERATED ALWAYS AS IDENTITY (
-    SEQUENCE NAME public.technicien_id_technicien_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1
-);
-
-
---
--- TOC entry 232 (class 1259 OID 25386)
--- Name: ticket; Type: TABLE; Schema: public; Owner: postgres
---
 
 CREATE TABLE public.ticket (
-    id_ticket integer NOT NULL,
+    id_ticket integer GENERATED ALWAYS AS IDENTITY,
     sujet character varying(200) NOT NULL,
     description text NOT NULL,
     date_ouverture timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -239,386 +97,20 @@ CREATE TABLE public.ticket (
     id_client integer NOT NULL,
     id_serveur integer,
     id_technicien integer,
+    CONSTRAINT ticket_pkey PRIMARY KEY (id_ticket),
     CONSTRAINT ticket_priorite_check CHECK (((priorite)::text = ANY ((ARRAY['basse'::character varying, 'normale'::character varying, 'haute'::character varying, 'critique'::character varying])::text[]))),
-    CONSTRAINT ticket_statut_check CHECK (((statut)::text = ANY ((ARRAY['ouvert'::character varying, 'en cours'::character varying, 'resolu'::character varying, 'ferme'::character varying])::text[])))
+    CONSTRAINT ticket_statut_check CHECK (((statut)::text = ANY ((ARRAY['ouvert'::character varying, 'en cours'::character varying, 'resolu'::character varying, 'ferme'::character varying])::text[]))),
+    CONSTRAINT ticket_id_client_fkey FOREIGN KEY (id_client) REFERENCES public.client(id_client) ON DELETE RESTRICT,
+    CONSTRAINT ticket_id_serveur_fkey FOREIGN KEY (id_serveur) REFERENCES public.serveur(id_serveur) ON DELETE SET NULL,
+    CONSTRAINT ticket_id_technicien_fkey FOREIGN KEY (id_technicien) REFERENCES public.technicien(id_technicien) ON DELETE SET NULL
 );
 
-
-ALTER TABLE public.ticket OWNER TO postgres;
-
---
--- TOC entry 231 (class 1259 OID 25385)
--- Name: ticket_id_ticket_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-ALTER TABLE public.ticket ALTER COLUMN id_ticket ADD GENERATED ALWAYS AS IDENTITY (
-    SEQUENCE NAME public.ticket_id_ticket_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1
-);
-
-
---
--- TOC entry 5094 (class 0 OID 25335)
--- Dependencies: 228
--- Data for Name: abonnement; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.abonnement (id_abonnement, date_debut, date_fin, statut, prix_souscription, id_client, id_offre, id_serveur) FROM stdin;
-\.
-
-
---
--- TOC entry 5088 (class 0 OID 25279)
--- Dependencies: 222
--- Data for Name: client; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.client (id_client, nom, email, telephone, date_inscription, type_client, denomination_sociale, siret) FROM stdin;
-\.
-
-
---
--- TOC entry 5086 (class 0 OID 25270)
--- Dependencies: 220
--- Data for Name: datacenter; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.datacenter (id_datacenter, nom, ville) FROM stdin;
-\.
-
-
---
--- TOC entry 5090 (class 0 OID 25297)
--- Dependencies: 224
--- Data for Name: offre; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.offre (id_offre, nom, categorie, prix_mensuel_ht, en_vente) FROM stdin;
-\.
-
-
---
--- TOC entry 5092 (class 0 OID 25311)
--- Dependencies: 226
--- Data for Name: serveur; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.serveur (id_serveur, nom_hote, adresse_ip, statut, date_mise_en_service, id_datacenter) FROM stdin;
-\.
-
-
---
--- TOC entry 5096 (class 0 OID 25368)
--- Dependencies: 230
--- Data for Name: technicien; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.technicien (id_technicien, nom, prenom, email_professionnel, id_datacenter) FROM stdin;
-\.
-
-
---
--- TOC entry 5098 (class 0 OID 25386)
--- Dependencies: 232
--- Data for Name: ticket; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.ticket (id_ticket, sujet, description, date_ouverture, priorite, statut, id_client, id_serveur, id_technicien) FROM stdin;
-\.
-
-
---
--- TOC entry 5104 (class 0 OID 0)
--- Dependencies: 227
--- Name: abonnement_id_abonnement_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.abonnement_id_abonnement_seq', 1, false);
-
-
---
--- TOC entry 5105 (class 0 OID 0)
--- Dependencies: 221
--- Name: client_id_client_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.client_id_client_seq', 1, false);
-
-
---
--- TOC entry 5106 (class 0 OID 0)
--- Dependencies: 219
--- Name: datacenter_id_datacenter_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.datacenter_id_datacenter_seq', 1, false);
-
-
---
--- TOC entry 5107 (class 0 OID 0)
--- Dependencies: 223
--- Name: offre_id_offre_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.offre_id_offre_seq', 1, false);
-
-
---
--- TOC entry 5108 (class 0 OID 0)
--- Dependencies: 225
--- Name: serveur_id_serveur_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.serveur_id_serveur_seq', 1, false);
-
-
---
--- TOC entry 5109 (class 0 OID 0)
--- Dependencies: 229
--- Name: technicien_id_technicien_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.technicien_id_technicien_seq', 1, false);
-
-
---
--- TOC entry 5110 (class 0 OID 0)
--- Dependencies: 231
--- Name: ticket_id_ticket_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.ticket_id_ticket_seq', 1, false);
-
-
---
--- TOC entry 4917 (class 2606 OID 25351)
--- Name: abonnement abonnement_id_serveur_key; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.abonnement
-    ADD CONSTRAINT abonnement_id_serveur_key UNIQUE (id_serveur);
-
-
---
--- TOC entry 4919 (class 2606 OID 25349)
--- Name: abonnement abonnement_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.abonnement
-    ADD CONSTRAINT abonnement_pkey PRIMARY KEY (id_abonnement);
-
-
---
--- TOC entry 4904 (class 2606 OID 25295)
--- Name: client client_email_key; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.client
-    ADD CONSTRAINT client_email_key UNIQUE (email);
-
-
---
--- TOC entry 4906 (class 2606 OID 25293)
--- Name: client client_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.client
-    ADD CONSTRAINT client_pkey PRIMARY KEY (id_client);
-
-
---
--- TOC entry 4902 (class 2606 OID 25277)
--- Name: datacenter datacenter_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.datacenter
-    ADD CONSTRAINT datacenter_pkey PRIMARY KEY (id_datacenter);
-
-
---
--- TOC entry 4908 (class 2606 OID 25309)
--- Name: offre offre_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.offre
-    ADD CONSTRAINT offre_pkey PRIMARY KEY (id_offre);
-
-
---
--- TOC entry 4911 (class 2606 OID 25328)
--- Name: serveur serveur_adresse_ip_key; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.serveur
-    ADD CONSTRAINT serveur_adresse_ip_key UNIQUE (adresse_ip);
-
-
---
--- TOC entry 4913 (class 2606 OID 25326)
--- Name: serveur serveur_nom_hote_key; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.serveur
-    ADD CONSTRAINT serveur_nom_hote_key UNIQUE (nom_hote);
-
-
---
--- TOC entry 4915 (class 2606 OID 25324)
--- Name: serveur serveur_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.serveur
-    ADD CONSTRAINT serveur_pkey PRIMARY KEY (id_serveur);
-
-
---
--- TOC entry 4923 (class 2606 OID 25379)
--- Name: technicien technicien_email_professionnel_key; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.technicien
-    ADD CONSTRAINT technicien_email_professionnel_key UNIQUE (email_professionnel);
-
-
---
--- TOC entry 4925 (class 2606 OID 25377)
--- Name: technicien technicien_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.technicien
-    ADD CONSTRAINT technicien_pkey PRIMARY KEY (id_technicien);
-
-
---
--- TOC entry 4929 (class 2606 OID 25403)
--- Name: ticket ticket_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.ticket
-    ADD CONSTRAINT ticket_pkey PRIMARY KEY (id_ticket);
-
-
---
--- TOC entry 4920 (class 1259 OID 25419)
--- Name: idx_abonnement_client; Type: INDEX; Schema: public; Owner: postgres
---
+-- =========================
+-- INDEX
+-- =========================
 
 CREATE INDEX idx_abonnement_client ON public.abonnement USING btree (id_client);
-
-
---
--- TOC entry 4921 (class 1259 OID 25420)
--- Name: idx_abonnement_offre; Type: INDEX; Schema: public; Owner: postgres
---
-
 CREATE INDEX idx_abonnement_offre ON public.abonnement USING btree (id_offre);
-
-
---
--- TOC entry 4909 (class 1259 OID 25423)
--- Name: idx_serveur_datacenter_statut; Type: INDEX; Schema: public; Owner: postgres
---
-
 CREATE INDEX idx_serveur_datacenter_statut ON public.serveur USING btree (id_datacenter, statut);
-
-
---
--- TOC entry 4926 (class 1259 OID 25421)
--- Name: idx_ticket_client; Type: INDEX; Schema: public; Owner: postgres
---
-
 CREATE INDEX idx_ticket_client ON public.ticket USING btree (id_client);
-
-
---
--- TOC entry 4927 (class 1259 OID 25422)
--- Name: idx_ticket_technicien_statut; Type: INDEX; Schema: public; Owner: postgres
---
-
 CREATE INDEX idx_ticket_technicien_statut ON public.ticket USING btree (id_technicien, statut);
-
-
---
--- TOC entry 4931 (class 2606 OID 25352)
--- Name: abonnement abonnement_id_client_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.abonnement
-    ADD CONSTRAINT abonnement_id_client_fkey FOREIGN KEY (id_client) REFERENCES public.client(id_client) ON DELETE RESTRICT;
-
-
---
--- TOC entry 4932 (class 2606 OID 25357)
--- Name: abonnement abonnement_id_offre_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.abonnement
-    ADD CONSTRAINT abonnement_id_offre_fkey FOREIGN KEY (id_offre) REFERENCES public.offre(id_offre) ON DELETE RESTRICT;
-
-
---
--- TOC entry 4933 (class 2606 OID 25362)
--- Name: abonnement abonnement_id_serveur_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.abonnement
-    ADD CONSTRAINT abonnement_id_serveur_fkey FOREIGN KEY (id_serveur) REFERENCES public.serveur(id_serveur) ON DELETE RESTRICT;
-
-
---
--- TOC entry 4930 (class 2606 OID 25329)
--- Name: serveur serveur_id_datacenter_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.serveur
-    ADD CONSTRAINT serveur_id_datacenter_fkey FOREIGN KEY (id_datacenter) REFERENCES public.datacenter(id_datacenter) ON DELETE RESTRICT;
-
-
---
--- TOC entry 4934 (class 2606 OID 25380)
--- Name: technicien technicien_id_datacenter_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.technicien
-    ADD CONSTRAINT technicien_id_datacenter_fkey FOREIGN KEY (id_datacenter) REFERENCES public.datacenter(id_datacenter) ON DELETE RESTRICT;
-
-
---
--- TOC entry 4935 (class 2606 OID 25404)
--- Name: ticket ticket_id_client_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.ticket
-    ADD CONSTRAINT ticket_id_client_fkey FOREIGN KEY (id_client) REFERENCES public.client(id_client) ON DELETE RESTRICT;
-
-
---
--- TOC entry 4936 (class 2606 OID 25409)
--- Name: ticket ticket_id_serveur_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.ticket
-    ADD CONSTRAINT ticket_id_serveur_fkey FOREIGN KEY (id_serveur) REFERENCES public.serveur(id_serveur) ON DELETE SET NULL;
-
-
---
--- TOC entry 4937 (class 2606 OID 25414)
--- Name: ticket ticket_id_technicien_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.ticket
-    ADD CONSTRAINT ticket_id_technicien_fkey FOREIGN KEY (id_technicien) REFERENCES public.technicien(id_technicien) ON DELETE SET NULL;
-
-
--- Completed on 2026-10-27 18:49:29
-
---
--- PostgreSQL database dump complete
---
-
-\unrestrict htB24GnpFBhxCaDxpVvP0IPjMbut5RdsQXrecBlRamlhsgkZXQ5SK0MXivbingp
-
