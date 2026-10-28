@@ -13,10 +13,13 @@ pool.query("SELECT NOW()")
     });
 
 const productRoutes = require("./routes/product.routes");
+const dashboardRoutes = require("./routes/dashboard.routes");
 
 const datacenterRoutes = require("./routes/datacenterRoutes");
 const technicienRoutes = require("./routes/technicienRoutes");
 const ticketRoutes = require("./routes/ticketRoutes");
+const offreRoutes = require("./routes/offreRoutes");
+const serveurRoutes = require("./routes/serveurRoutes");
 
 app.use(express.json());
 
@@ -25,6 +28,8 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/datacenters", datacenterRoutes);
 app.use("/api/technicians", technicienRoutes);
 app.use("/api/tickets", ticketRoutes);
+app.use("/api/catalog", offreRoutes);
+app.use("/api/servers", serveurRoutes);
 
 // Le 404 reste TOUJOURS en dernier
 app.use((req, res) => {

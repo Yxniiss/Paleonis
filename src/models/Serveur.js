@@ -1,12 +1,38 @@
 const pool = require("../config/db"); // importer connexion bdd
 
 class Serveur {
-    static async findAll() {
-        const resultat = await pool.query( // pool nom de la variable
-            "SELECT * FROM public.serveur ORDER BY id_serveur" //
-        );
+    // Filtres optionnels : idDatacenter, statut, libre (true = sans abonnement, false = attribué)
+    static async findAll({ idDatacenter, statut, libre } = {}) {
+        const conditions = [];
+        const valeurs = [];
 
-        return resultat.rows; // rows contient les lignes recuperer par la bdd
+        if (idDatacenter) {
+            valeurs.push(idDatacenter);
+            conditions.push(`s.id_datacenter = $${valeurs.length}`);
+        }
+        if (statut) {
+            valeurs.push(statut);
+            conditions.push(`s.statut = $${valeurs.length}`);
+        }
+        if (libre === true) {
+            conditions.push("a.id_abonnement IS NULL");
+        }
+        if (libre === false) {
+            conditions.push("a.id_abonnement IS NOT NULL");
+        }
+
+        const where = conditions.length ? "WHERE " + conditions.join(" AND ") : "";
+
+        const { rows } = await pool.query(
+            `SELECT s.id_serveur, s.nom_hote, s.adresse_ip, s.statut, s.date_mise_en_service,
+                    s.id_datacenter, (a.id_abonnement IS NULL) AS libre
+             FROM serveur s
+             LEFT JOIN abonnement a ON a.id_serveur = s.id_serveur
+             ${where}
+             ORDER BY s.nom_hote`,
+            valeurs
+        );
+        return rows;
     }
 
     static async findById(id){
@@ -53,9 +79,6 @@ class Serveur {
         )
         return resultat.rows[0];
     }
-
-
-
 }
 
 module.exports = Serveur;

@@ -1,9 +1,15 @@
 const Serveur = require("../models/Serveur");
 
 class ServeurController {
+    // GET /api/servers?datacenter=1&statut=en service&libre=true
     static async getAll(req, res){
         try{
-           const Serveurs = await Serveur.findAll();
+            const { datacenter, statut, libre } = req.query;
+            const Serveurs = await Serveur.findAll({
+                idDatacenter: datacenter ? Number(datacenter) : null,
+                statut: statut || null,
+                libre: libre === "true" ? true : libre === "false" ? false : null,
+            });
             res.json(Serveurs); 
         } catch(erreur){
             res.status(500).json({ erreur: "Erreur serveur" })
