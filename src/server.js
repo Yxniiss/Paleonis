@@ -13,12 +13,14 @@ pool.query("SELECT NOW()")
     });
 
 const productRoutes = require("./routes/product.routes");
-
+const dashboardRoutes = require("./routes/dashboard.routes");   // ← ajouté
 
 app.use(express.json());
 
 app.use("/api/products", productRoutes);
+app.use("/api/dashboard", dashboardRoutes);                      // ← ajouté
 
+// Le 404 reste TOUJOURS en dernier
 app.use((req, res) => {
     res.status(404).json({ message: "Page introuvable" });
 });
